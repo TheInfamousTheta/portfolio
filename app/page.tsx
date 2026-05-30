@@ -223,7 +223,7 @@ TOKEN_TYPE: BRACE_OPEN
 
               {/* Terminal Window Body */}
               <div className="p-6 font-mono text-sm leading-relaxed">
-                <p className="text-zinc-500 mb-1">// Route packets directly to Kaustubh's mailbox</p>
+                <p className="text-zinc-500 mb-1">{"// Route packets directly to Kaustubh's mailbox"}</p>
                 <p className="mb-4">
                   <span className="text-emerald-500">$</span> ping -c 1 {personalDetails.email}
                 </p>
