@@ -112,7 +112,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    fetchMetrics();
+    // Defer initial fetch to next tick to prevent synchronous state triggers inside setup
+    const initialTimer = setTimeout(() => {
+      fetchMetrics();
+    }, 0);
+    
     setIsPolling(true);
 
     const interval = setInterval(() => {
@@ -120,6 +124,7 @@ export default function Dashboard() {
     }, 3000);
 
     return () => {
+      clearTimeout(initialTimer);
       clearInterval(interval);
       setIsPolling(false);
     };

@@ -74,7 +74,14 @@ export async function POST(request: Request) {
     // 2. Gather Docker Engine Containers Metrics via Unix socket
     const rawContainers = await queryDockerAPI('/containers/json?all=1') as DockerContainerRaw[] | null;
     
-    let containersList = [];
+    let containersList: {
+      id: string;
+      name: string;
+      image: string;
+      state: string;
+      status: string;
+      ports: string[];
+    }[] = [];
     if (Array.isArray(rawContainers)) {
       containersList = rawContainers.map((container: DockerContainerRaw) => ({
         id: container.Id.substring(0, 12),
