@@ -7,8 +7,11 @@ interface DockerContainer {
   id: string;
   name: string;
   image: string;
+  imageSize: string;
   state: string;
   status: string;
+  cpu: string;
+  memory: string;
   ports: string[];
 }
 
@@ -356,8 +359,9 @@ export default function Dashboard() {
                   <tr className="border-b border-zinc-800 text-zinc-500 uppercase tracking-wider">
                     <th className="pb-3 font-semibold">Container</th>
                     <th className="pb-3 font-semibold">Image</th>
-                    <th className="pb-3 font-semibold">State</th>
-                    <th className="pb-3 font-semibold">Status</th>
+                    <th className="pb-3 font-semibold text-center">CPU %</th>
+                    <th className="pb-3 font-semibold text-center">Memory (Usage/Limit)</th>
+                    <th className="pb-3 font-semibold text-center">State</th>
                     <th className="pb-3 font-semibold text-right">Ports</th>
                   </tr>
                 </thead>
@@ -370,8 +374,17 @@ export default function Dashboard() {
                         </span>
                         {container.name}
                       </td>
-                      <td className="py-3.5 text-zinc-400 max-w-[200px] truncate">{container.image}</td>
-                      <td className="py-3.5">
+                      <td className="py-3.5 text-zinc-400">
+                        <div className="max-w-[150px] truncate">{container.image}</div>
+                        <div className="text-[10px] text-zinc-650 mt-0.5">{"Size: "}{container.imageSize}</div>
+                      </td>
+                      <td className="py-3.5 text-center text-emerald-400 font-bold font-mono">
+                        {container.cpu}
+                      </td>
+                      <td className="py-3.5 text-center text-zinc-300 font-mono">
+                        {container.memory}
+                      </td>
+                      <td className="py-3.5 text-center">
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-semibold text-[10px] ${
                           container.state === 'running' 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
@@ -380,8 +393,8 @@ export default function Dashboard() {
                           <span className={`h-1 w-1 rounded-full ${container.state === 'running' ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}></span>
                           {container.state}
                         </span>
+                        <div className="text-[9px] text-zinc-550 mt-1">{container.status}</div>
                       </td>
-                      <td className="py-3.5 text-zinc-400">{container.status}</td>
                       <td className="py-3.5 text-right font-mono text-zinc-400">
                         {container.ports.length > 0 ? (
                           <div className="flex flex-col gap-0.5 items-end">
