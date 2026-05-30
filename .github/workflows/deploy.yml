@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: theinfamoustheta/my-portfolio
+
 jobs:
   ci-check:
     name: Code Quality Assurance (Lint & Type Check)
@@ -31,29 +35,83 @@ jobs:
       - name: Check TypeScript type-safety
         run: npx tsc --noEmit
 
-  docker-build:
-    name: Docker Build Validation
+  build-and-push:
+    name: Build & Push Container Image
     runs-on: ubuntu-latest
     needs: ci-check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: actions/setup-qemu-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          platforms: 'all'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
 
       - name: Set up Docker Buildx
-        uses: actions/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image (Local Check)
+      - name: Build and Push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: false
-          tags: portfolio-app:latest
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-to-vm:
+    name: Deploy to Azure VM via SSH
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Deploy package to VM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            # Pull repository setup if docker-compose changes, or keep running
+            cd ~/my-portfolio || mkdir -p ~/my-portfolio && cd ~/my-portfolio
+            
+            # Write a minimal local compose that pulls the ghcr.io image
+            cat << 'EOF' > docker-compose.yml
+            services:
+              portfolio:
+                image: ghcr.io/theinfamoustheta/my-portfolio:latest
+                container_name: kaustubh-portfolio
+                ports:
+                  - "6000:3000"
+                environment:
+                  - NODE_ENV=production
+                  - PORT=3000
+                restart: always
+            EOF
+            
+            # Log in to GitHub Packages Registry and deploy
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
