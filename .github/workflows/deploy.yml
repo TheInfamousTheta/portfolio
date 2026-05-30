@@ -106,6 +106,9 @@ jobs:
                 container_name: kaustubh-portfolio
                 ports:
                   - "6000:3000"
+                user: root
+                volumes:
+                  - /var/run/docker.sock:/var/run/docker.sock
                 environment:
                   - NODE_ENV=production
                   - PORT=3000
