@@ -1,13 +1,56 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Terminal, ShieldAlert, Cpu, HardDrive, Clock, Activity, ShieldCheck, Lock, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ShieldAlert, Cpu, HardDrive, Clock, Activity, ShieldCheck, Lock, RefreshCw } from 'lucide-react';
+
+interface DockerContainer {
+  id: string;
+  name: string;
+  image: string;
+  state: string;
+  status: string;
+  ports: string[];
+}
+
+interface VMStats {
+  success: boolean;
+  system: {
+    platform: string;
+    cpuCount: number;
+    cpuLoad1Min: number;
+    memory: {
+      total: number;
+      used: number;
+      free: number;
+      percentage: string;
+    };
+    uptime: number;
+  };
+  docker: {
+    active: boolean;
+    containersCount: number;
+    containers: DockerContainer[];
+  };
+}
 
 export default function Dashboard() {
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // Use lazy state initialization to prevent calling setState inside useEffect
+  const [password, setPassword] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('dashboard_token') || '';
+    }
+    return '';
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !!sessionStorage.getItem('dashboard_token');
+    }
+    return false;
+  });
+
   const [error, setError] = useState('');
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<VMStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
 
@@ -42,9 +85,9 @@ export default function Dashboard() {
     }
   };
 
-  // Poll server for metrics
-  const fetchMetrics = async () => {
-    const token = sessionStorage.getItem('dashboard_token') || password;
+  // Poll server for metrics wrapped in useCallback to keep dependencies stable
+  const fetchMetrics = useCallback(async () => {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('dashboard_token') || password : password;
     if (!token) return;
 
     try {
@@ -63,17 +106,9 @@ export default function Dashboard() {
     } catch {
       console.error('Failed to poll metrics');
     }
-  };
+  }, [password]);
 
-  // Check existing token and handle polling
-  useEffect(() => {
-    const storedToken = sessionStorage.getItem('dashboard_token');
-    if (storedToken) {
-      setPassword(storedToken);
-      setIsAuthenticated(true);
-    }
-  }, []);
-
+  // Set up polling intervals based on authentication state
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -88,11 +123,13 @@ export default function Dashboard() {
       clearInterval(interval);
       setIsPolling(false);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchMetrics]);
 
   // Log out / Lock dashboard
   const handleLock = () => {
-    sessionStorage.removeItem('dashboard_token');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('dashboard_token');
+    }
     setPassword('');
     setIsAuthenticated(false);
     setStats(null);
@@ -192,7 +229,7 @@ export default function Dashboard() {
               <h1 className="text-xl font-bold tracking-tight text-white">Azure VM Active Monitor</h1>
             </div>
             <p className="text-xs text-zinc-500 uppercase tracking-widest">
-              LOCKED SESSION // HOST: {stats?.system?.platform || 'linux'} // SOCKET ACTIVE: {stats?.docker?.active ? 'YES' : 'NO'}
+              {"LOCKED SESSION // HOST: "}{stats?.system?.platform || 'linux'}{" // SOCKET ACTIVE: "}{stats?.docker?.active ? 'YES' : 'NO'}
             </p>
           </div>
 
@@ -241,7 +278,7 @@ export default function Dashboard() {
               ></div>
             </div>
             <span className="text-[10px] text-zinc-500">
-              CORES LOGICAL: {stats?.system?.cpuCount || 0} // LOAD 1-MIN AVG
+              {"CORES LOGICAL: "}{stats?.system?.cpuCount || 0}{" // LOAD 1-MIN AVG"}
             </span>
           </div>
 
@@ -261,7 +298,7 @@ export default function Dashboard() {
               ></div>
             </div>
             <span className="text-[10px] text-zinc-500">
-              USED: {formatBytes(stats?.system?.memory?.used)} // TOTAL: {formatBytes(stats?.system?.memory?.total)}
+              {"USED: "}{formatBytes(stats?.system?.memory?.used || 0)}{" // TOTAL: "}{formatBytes(stats?.system?.memory?.total || 0)}
             </span>
           </div>
 
@@ -278,7 +315,7 @@ export default function Dashboard() {
               <span className="text-[10px] text-emerald-500">handshake active</span>
             </div>
             <span className="text-[10px] text-zinc-500">
-              CORE TIMESTAMP: {new Date().toLocaleTimeString()}
+              {"CORE TIMESTAMP: "}{new Date().toLocaleTimeString()}
             </span>
           </div>
 
@@ -293,7 +330,7 @@ export default function Dashboard() {
               <h2 className="text-md font-bold text-white">Docker Container Runtime Logs</h2>
             </div>
             <span className="text-xs text-zinc-500">
-              CONTAINERS DETECTED: {stats?.docker?.containersCount || 0}
+              {"CONTAINERS DETECTED: "}{stats?.docker?.containersCount || 0}
             </span>
           </div>
 
@@ -321,7 +358,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/50">
-                  {stats.docker.containers.map((container: any) => (
+                  {stats.docker.containers.map((container: DockerContainer) => (
                     <tr key={container.id} className="hover:bg-zinc-950/40">
                       <td className="py-3.5 font-bold text-white flex items-center gap-2">
                         <span className="text-[10px] text-zinc-500 bg-zinc-950 border border-zinc-800 px-1.5 py-0.5 rounded">

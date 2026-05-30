@@ -5,8 +5,24 @@ import os from 'os';
 // Secure endpoint check
 const VALID_PASSWORD = 'KaUsTuBh2006';
 
+interface DockerPortRaw {
+  IP?: string;
+  PrivatePort: number;
+  PublicPort?: number;
+  Type: string;
+}
+
+interface DockerContainerRaw {
+  Id: string;
+  Names: string[];
+  Image: string;
+  State: string;
+  Status: string;
+  Ports?: DockerPortRaw[];
+}
+
 // Helper to query Docker Engine API via Unix Socket
-function queryDockerAPI(path: string): Promise<any> {
+function queryDockerAPI(path: string): Promise<unknown> {
   return new Promise((resolve) => {
     const options = {
       socketPath: '/var/run/docker.sock',
@@ -56,17 +72,17 @@ export async function POST(request: Request) {
     const cpuCount = os.cpus().length;
 
     // 2. Gather Docker Engine Containers Metrics via Unix socket
-    const rawContainers: any = await queryDockerAPI('/containers/json?all=1');
+    const rawContainers = await queryDockerAPI('/containers/json?all=1') as DockerContainerRaw[] | null;
     
     let containersList = [];
     if (Array.isArray(rawContainers)) {
-      containersList = rawContainers.map((container: any) => ({
+      containersList = rawContainers.map((container: DockerContainerRaw) => ({
         id: container.Id.substring(0, 12),
         name: container.Names[0]?.replace(/^\//, '') || 'unknown',
         image: container.Image,
         state: container.State,
         status: container.Status,
-        ports: container.Ports?.map((p: any) => `${p.PublicPort || p.PrivatePort}->${p.PrivatePort}`) || [],
+        ports: container.Ports?.map((p: DockerPortRaw) => `${p.PublicPort || p.PrivatePort}->${p.PrivatePort}`) || [],
       }));
     }
 
@@ -90,7 +106,7 @@ export async function POST(request: Request) {
         containers: containersList,
       },
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
