@@ -115,9 +115,8 @@ export default function Dashboard() {
     // Defer initial fetch to next tick to prevent synchronous state triggers inside setup
     const initialTimer = setTimeout(() => {
       fetchMetrics();
+      setIsPolling(true);
     }, 0);
-    
-    setIsPolling(true);
 
     const interval = setInterval(() => {
       fetchMetrics();
