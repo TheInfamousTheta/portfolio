@@ -33,7 +33,9 @@ jobs:
         run: npm run lint
 
       - name: Check TypeScript type-safety (using Microsoft Go-native tsgo)
-        run: npx tsgo --noEmit
+        run: |
+          find node_modules -name "tsgo" -exec chmod +x {} \; || true
+          npx tsgo --noEmit
 
   build-and-push:
     name: Build & Push Container Image
