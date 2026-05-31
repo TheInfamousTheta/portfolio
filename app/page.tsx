@@ -3,6 +3,10 @@ import Footer from '../components/Footer';
 import ProjectCard from '../components/ProjectCard';
 import { personalDetails, projects, experiences } from '../data/portfolio';
 import { Terminal, ArrowUpRight, Mail, Calendar, MapPin, Cpu, Database } from 'lucide-react';
+import fs from 'fs';
+import path from 'path';
+
+export const dynamic = 'force-dynamic';
 
 const GithubIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -18,6 +22,15 @@ const LinkedinIcon = ({ className }: { className?: string }) => (
 
 
 export default function Home() {
+  let displayProjects = projects;
+  try {
+    const filePath = path.join(process.cwd(), 'data', 'projects.json');
+    const content = fs.readFileSync(filePath, 'utf8');
+    displayProjects = JSON.parse(content);
+  } catch {
+    // Fallback to statically imported projects
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-black text-zinc-900 dark:text-zinc-50 antialiased selection:bg-emerald-500 selection:text-white">
       
@@ -116,7 +129,7 @@ TOKEN_TYPE: BRACE_OPEN
 
             {/* Projects Grid */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
+              {displayProjects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </div>
