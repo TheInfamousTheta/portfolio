@@ -44,50 +44,9 @@ export const personalDetails: PersonalDetails = {
   },
 };
 
-export const projects: Project[] = [
-  {
-    id: "audiosync",
-    title: "AudioSync (Spotify Killer)",
-    description: "A real-time acoustic & WAN time-synchronized music streaming client using NTP-like WebSocket offsets and BLE broadcasts.",
-    longDescription: "A high-performance offline-first audio synchronization system. Features rapid acoustic consensus calibration using high-frequency microphone chirps to align multi-device playback down to sub-10ms offsets. Built-in BLE frame broadcast for offline party sync and local SQLite caches.",
-    tech: ["Flutter/Dart", "WebSockets", "Bluetooth BLE", "Rust", "SQLite", "DSP (SoLoud)"],
-    github: "https://github.com/TheInfamousTheta/AudioSync",
-    demo: "https://demo.example.com/audiosync",
-    stats: [
-      { label: "Consensus Offset", value: "< 10ms" },
-      { label: "Sync Medium", value: "BLE / WAN" },
-      { label: "DSP Buffers", value: "Circular Mono" },
-    ],
-  },
-  {
-    id: "lexer",
-    title: "Lexer & Tokenizer Engine",
-    description: "A high-performance programming language lexer featuring state-machine based tokenization and AST generation.",
-    longDescription: "A custom lexer supporting dynamic token mapping, string-to-token lexical conversions, and state-machine scanning. Built to generate abstract syntax trees (AST) with exceptional throughput, providing deep error boundary checks and native syntax highlighting structures.",
-    tech: ["TypeScript", "Rust/WASM", "Lexing Systems", "Abstract Syntax Trees (AST)", "State Machines"],
-    github: "https://github.com/TheInfamousTheta/Lexer-Tokenizer",
-    demo: "https://demo.example.com/lexer",
-    stats: [
-      { label: "Throughput", value: "1.2 GB/s" },
-      { label: "Token Types", value: "Dynamic Mapping" },
-      { label: "Parser Depth", value: "Recursive" },
-    ],
-  },
-  {
-    id: "aetheric",
-    title: "Aetheric Sound Streamer",
-    description: "A professional real-time web audio streamer utilizing high-fidelity circular buffers and visualizers.",
-    longDescription: "Constructed with low-latency Web Audio API nodes, circular sample buffers, and fast discrete Fourier transforms for high-fidelity interactive spectrum visualization. Seamlessly handles streaming fallback states.",
-    tech: ["React/Next.js", "Web Audio API", "Web Workers", "Canvas API", "TypeScript"],
-    github: "https://github.com/TheInfamousTheta/Aetheric-Audio-Streamer",
-    demo: "https://demo.example.com/aetheric",
-    stats: [
-      { label: "Buffer Latency", value: "24ms" },
-      { label: "FPS Render", value: "60fps Canvas" },
-      { label: "Sample Rate", value: "48kHz" },
-    ],
-  },
-];
+import projectsData from './projects.json';
+
+export const projects: Project[] = projectsData as Project[];
 
 export const experiences: Experience[] = [
   {
