@@ -139,6 +139,11 @@ export default function ProjectManager() {
     setStat2Value(proj.stats?.[1]?.value || '');
     setStat3Label(proj.stats?.[2]?.label || '');
     setStat3Value(proj.stats?.[2]?.value || '');
+
+    // Smooth scroll to top form for premium UX
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Reset form states
@@ -358,7 +363,7 @@ export default function ProjectManager() {
               {editingProject ? 'Modify Struct' : 'Compile New Struct'}
             </h2>
 
-            <form onSubmit={saveProject} className="space-y-4 text-xs">
+            <form id="project-form" onSubmit={saveProject} className="space-y-4 text-xs">
               
               <div>
                 <label className="block text-zinc-400 uppercase tracking-wider mb-1.5">Project ID (unique lowercase slug)</label>
@@ -555,12 +560,17 @@ export default function ProjectManager() {
 
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => startEdit(proj)}
+                            type="button"
+                            onClick={() => {
+                              startEdit(proj);
+                              document.getElementById('project-form')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
                             className="flex h-7 w-7 items-center justify-center rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
                           >
                             <Edit className="h-3.5 w-3.5" />
                           </button>
                           <button
+                            type="button"
                             onClick={() => deleteProject(proj.id)}
                             className="flex h-7 w-7 items-center justify-center rounded bg-red-950/20 hover:bg-red-950/50 border border-red-900/30 text-red-400 hover:text-red-300 transition-colors"
                           >
