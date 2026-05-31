@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ShieldAlert, Cpu, HardDrive, Clock, Activity, ShieldCheck, Lock, RefreshCw } from 'lucide-react';
+import { ShieldAlert, Cpu, HardDrive, Clock, Activity, ShieldCheck, Lock, RefreshCw, FolderGit } from 'lucide-react';
+import Link from 'next/link';
 
 interface DockerContainer {
   id: string;
@@ -248,6 +249,14 @@ export default function Dashboard() {
               </span>
               <span>{isPolling ? 'Live Sync Active (3s)' : 'Offline'}</span>
             </div>
+
+            <Link
+              href="/dashboard/projects"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors"
+            >
+              <FolderGit className="h-3.5 w-3.5 text-emerald-500" />
+              {"Manage Projects"}
+            </Link>
 
             <button
               onClick={fetchMetrics}
